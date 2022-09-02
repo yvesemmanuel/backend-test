@@ -1,0 +1,110 @@
+service: nina-backend-test
+
+layers:
+  posts:
+    path: ./build
+    name: ${self:service}-posts-layer
+    description: Posts lib
+    compatibleRuntimes:
+      - python3.8
+    retain: false
+
+provider:
+  name: aws
+  region: us-west-2
+  runtime: python3.8
+  stage: dev
+  environment:
+    AWS_DEFAULT_REGION: ${env:AWS_DEFAULT_REGION}
+    AWS_ACCESS_KEY_ID: ${env:AWS_ACCESS_KEY_ID}
+    AWS_SECRET_ACCESS_KEY: ${env:AWS_SECRET_ACCESS_KEY}
+  layers:
+    - { Ref: PostsLambdaLayer }
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource: "arn:aws:dynamodb:us-west-2:*:*"
+        - Effect: Allow
+          Action:
+            - s3:*
+          Resource: "*"
+
+functions:
+  CreatePost:
+    handler: src/api/create_post.lambda_handler
+    events:
+      - http:
+          method: POST
+          path: /posts
+          cors: true
+  
+  InsertMedia:
+    handler: src/api/insert_media.lambda_handler
+    events:
+      - s3:
+          bucket: ${self:service}-media
+          event: s3:ObjectCreated:*
+          existing: true
+
+  ########################################
+  # Create new endpoints/functions below #
+  ########################################
+
+resources:
+  Resources:
+    postsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: PostsTable
+        AttributeDefinitions:
+          - AttributeName: _id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: _id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    mediasBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:service}-medias
+        AccessControl: PublicRead
+        CorsConfiguration:
+          CorsRules:
+            - AllowedHeaders: ["*"]
+              AllowedMethods: [GET, POST, HEAD, PUT]
+              AllowedOrigins: ["*"]
+    mediasBucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        PolicyDocument:
+          Statement:
+            - Effect: Allow
+              Principal: "*"
+              Action:
+                - s3:PutObject
+                - s3:PutObjectAcl
+              Resource:
+                Fn::Join:
+                  - ""
+                  - - "arn:aws:s3:::"
+                    - Ref: mediasBucket
+                    - /*
+        Bucket: { Ref: mediasBucket }
+
+
