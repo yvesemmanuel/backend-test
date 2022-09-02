@@ -96,3 +96,6 @@ aws iam attach-user-policy --policy-arn arn:aws:iam::aws:policy/AWSCloudFormatio
 ## Problems
 
 ## API url goes here
+
+https://i47qivqvnf.execute-api.us-west-1.amazonaws.com/prod
+https://i47qivqvnf.execute-api.us-west-1.amazonaws.com/prod/post

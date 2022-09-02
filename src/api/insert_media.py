@@ -1,23 +1,15 @@
-import os
 import boto3
+import logging
+from response import buildResponse
+from create_presigned_media_post import create_presigned_post
 
-dynamodb = boto3.client('dynamodb')
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
-def lambda_handler(event, context):
-    key = event['Records'][0]['s3']['object']['key']
-    bucket = event['Records'][0]['s3']['bucket']['name']
-    url = f'https://{bucket}.s3.amazonaws.com/{key}'
+s3_resource = boto3.resource("s3")
+bucketName = "nina-crud-bucket"
 
-    response = dynamodb.update_item(
-        Table='string',
-        Key={
-            '_id': '_id'    # tip: set post _id as object metadata in S3
-        },
-        UpdateExpression='SET medias = medias + :media',
-        ExpressionAttributeValues={
-            ':media': [url]
-        },
-        ReturnValues='UPDATED_NEW'
-    )
+def insert_media(id, post_id, data):
+    key = str(id) + post_id
 
-    return dict()
+    pass

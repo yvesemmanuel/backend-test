@@ -22,10 +22,10 @@ def lambda_handler(event, context):
             }
         )
 
-        item = response.get("Item", None)
+        post = response.get("Item", None)
 
-        if item is not None:
-            return buildResponse(200, item)
+        if post is not None:
+            return buildResponse(200, post)
         else:
             return buildResponse(404, {"Message": "Post {} not found.".format(post_id)})
     except:

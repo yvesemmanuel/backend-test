@@ -24,7 +24,7 @@ def lambda_handler(event, context):
         body = {
             "Operation": "Delete post",
             "Message": "Success",
-            "deletedItem": response
+            "deletedPost": response
         }
 
         return buildResponse(200, body)
